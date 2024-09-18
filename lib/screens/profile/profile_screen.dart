@@ -234,10 +234,15 @@ class ProfilePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ActionButton(icon: Icons.settings, label: 'App Settings'),
+          ActionButton(
+              icon: Icons.settings, label: 'App Settings', isFirst: true),
           ActionButton(icon: Icons.book, label: 'Study Resources'),
           ActionButton(icon: Icons.calendar_today, label: 'Exam Calendar'),
-          ActionButton(icon: Icons.logout, label: 'Log Out', isLogout: true),
+          ActionButton(
+              icon: Icons.logout,
+              label: 'Log Out',
+              isLogout: true,
+              isLast: true),
         ],
       ),
     );
@@ -248,12 +253,16 @@ class ActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final bool isLogout;
+  final bool isFirst;
+  final bool isLast;
 
   const ActionButton({
     Key? key,
     required this.icon,
     required this.label,
     this.isLogout = false,
+    this.isFirst = false,
+    this.isLast = false,
   }) : super(key: key);
 
   @override
@@ -280,13 +289,19 @@ class _ActionButtonState extends State<ActionButton> {
       child: Container(
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+            bottom: widget.isLast
+                ? BorderSide.none
+                : BorderSide(color: Colors.grey.shade200, width: 1),
           ),
           color: _isPressed
               ? (widget.isLogout
                   ? Colors.red.withOpacity(0.1)
                   : Colors.indigo.withOpacity(0.1))
               : Colors.transparent,
+          borderRadius: BorderRadius.vertical(
+            top: widget.isFirst ? const Radius.circular(8) : Radius.zero,
+            bottom: widget.isLast ? const Radius.circular(8) : Radius.zero,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
