@@ -42,7 +42,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                BottomNavigation(),
+                BottomNavigation(currentRoute: '/home'), // Update this line
               ],
             ),
           ),
