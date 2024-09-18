@@ -234,45 +234,77 @@ class ProfilePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildActionButton(context, Icons.settings, 'App Settings'),
-          _buildActionButton(context, Icons.book, 'Study Resources'),
-          _buildActionButton(context, Icons.calendar_today, 'Exam Calendar'),
-          _buildActionButton(context, Icons.logout, 'Log Out', isLogout: true),
+          ActionButton(icon: Icons.settings, label: 'App Settings'),
+          ActionButton(icon: Icons.book, label: 'Study Resources'),
+          ActionButton(icon: Icons.calendar_today, label: 'Exam Calendar'),
+          ActionButton(icon: Icons.logout, label: 'Log Out', isLogout: true),
         ],
       ),
     );
   }
+}
 
-  Widget _buildActionButton(BuildContext context, IconData icon, String label,
-      {bool isLogout = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.shade200,
-            width: 1,
+class ActionButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool isLogout;
+
+  const ActionButton({
+    Key? key,
+    required this.icon,
+    required this.label,
+    this.isLogout = false,
+  }) : super(key: key);
+
+  @override
+  _ActionButtonState createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<ActionButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () async {
+        if (widget.isLogout) {
+          await supabaseService.signOut();
+          Navigator.of(context).pushReplacementNamed('/login');
+        } else {
+          // TODO: Implement other action button functionality
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+          color: _isPressed
+              ? (widget.isLogout
+                  ? Colors.red.withOpacity(0.1)
+                  : Colors.indigo.withOpacity(0.1))
+              : Colors.transparent,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(widget.icon,
+                  color: widget.isLogout ? Colors.red : Colors.indigo),
+              const SizedBox(width: 16),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: widget.isLogout ? Colors.red : const Color(0xFF1E40AF),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: isLogout ? Colors.red : Colors.indigo),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: isLogout ? Colors.red : const Color(0xFF1E40AF),
-          ),
-        ),
-        onTap: () async {
-          if (isLogout) {
-            await supabaseService.signOut();
-            // ignore: use_build_context_synchronously
-            Navigator.of(context)
-                .pushReplacementNamed('/login'); // Adjust the route as needed
-          } else {
-            // TODO: Implement other action button functionality
-          }
-        },
       ),
     );
   }
