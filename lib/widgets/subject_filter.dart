@@ -30,6 +30,8 @@ class _SubjectFilterState extends State<SubjectFilter> {
       color: Colors.white, // Set background color to white
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        padding:
+            const EdgeInsets.symmetric(horizontal: 8.0), // Add padding here
         child: Row(
           children: _subjects.map((subject) {
             return Padding(
@@ -51,6 +53,12 @@ class _SubjectFilterState extends State<SubjectFilter> {
                       ? Colors.white
                       : Colors.black,
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20), // Fully rounded
+                ),
+                elevation: 2, // Minimal elevation
+                shadowColor:
+                    Colors.indigo.withOpacity(0.1), // Less solid shadow
               ),
             );
           }).toList(),
