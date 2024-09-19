@@ -106,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
           // Version number
-          Positioned(
+          const Positioned(
             bottom: 16,
             left: 0,
             right: 0,
@@ -131,11 +131,11 @@ class AbstractBackgroundPainter extends CustomPainter {
     final paint = Paint();
 
     // Background
-    paint.color = Color(0xFFEEF2FF);
+    paint.color = const Color(0xFFEEF2FF);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
 
     // Grid
-    paint.color = Color(0xFFE0E7FF);
+    paint.color = const Color(0xFFE0E7FF);
     paint.strokeWidth = 0.5;
     for (var i = 0; i < size.width; i += 20) {
       canvas.drawLine(
@@ -147,13 +147,13 @@ class AbstractBackgroundPainter extends CustomPainter {
     }
 
     // Circles
-    paint.color = Color(0x33818CF8);
+    paint.color = const Color(0x33818CF8);
     canvas.drawCircle(Offset(size.width * 0.1, size.height * 0.2), 50, paint);
-    paint.color = Color(0x1A4F46E5);
+    paint.color = const Color(0x1A4F46E5);
     canvas.drawCircle(Offset(size.width * 0.9, size.height * 0.8), 100, paint);
 
     // Curves
-    paint.color = Color(0xFF6366F1);
+    paint.color = const Color(0xFF6366F1);
     paint.strokeWidth = 2;
     paint.style = PaintingStyle.stroke;
     var path = Path();
@@ -164,7 +164,7 @@ class AbstractBackgroundPainter extends CustomPainter {
         size.width * 0.75, size.height * 0.75, size.width, size.height * 0.5);
     canvas.drawPath(path, paint);
 
-    paint.color = Color(0xFFA5B4FC);
+    paint.color = const Color(0xFFA5B4FC);
     paint.strokeWidth = 3;
     path = Path();
     path.moveTo(0, size.height * 0.8);
@@ -230,7 +230,7 @@ class _LoadingDotsState extends State<LoadingDots>
               width: 8,
               height: 8,
               margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Color(0xFF4F46E5),
                 shape: BoxShape.circle,
               ),
