@@ -8,5 +8,5 @@ Future<void> main() async {
 
   await supabaseService.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }

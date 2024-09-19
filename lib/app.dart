@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'services/supabase_service.dart';
+import 'screens/splash_screen.dart';
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +14,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: supabaseService.currentUser != null ? '/home' : '/login',
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/login': (context) => const AuthScreen(),
         '/home': (context) => const HomeScreen(),
       },
