@@ -1,9 +1,40 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_background.dart';
-import '../../widgets/subject_filter.dart'; // Add this import
+import 'widgets/subject_filter.dart';
+import '../../data/dummy_data.dart';
+import 'package:flutter/services.dart';
 
-class StudyMaterialScreen extends StatelessWidget {
+class StudyMaterialScreen extends StatefulWidget {
   const StudyMaterialScreen({Key? key}) : super(key: key);
+
+  @override
+  _StudyMaterialScreenState createState() => _StudyMaterialScreenState();
+}
+
+class _StudyMaterialScreenState extends State<StudyMaterialScreen> {
+  late PageController _pageController;
+  late String _selectedSubject;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSubject = DummyData.subjects[0]['name'];
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onSubjectSelected(String subject) {
+    setState(() {
+      _selectedSubject = subject;
+      final index = DummyData.subjects.indexWhere((s) => s['name'] == subject);
+      _pageController.jumpToPage(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,38 +57,50 @@ class StudyMaterialScreen extends StatelessWidget {
       body: AppBackground(
         child: Column(
           children: [
-            const SubjectFilter(), // Remove padding and attach directly below AppBar
+            SubjectFilter(
+              selectedSubject: _selectedSubject,
+              onSubjectSelected: _onSubjectSelected,
+              subjects:
+                  DummyData.subjects.map((s) => s['name'] as String).toList(),
+            ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  const Text(
-                    'Study Materials',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Add your study material content here
-                  // For example:
-                  _buildStudyMaterialItem(
-                    'UPSC Syllabus',
-                    'Comprehensive syllabus for UPSC exam',
-                    Icons.book,
-                  ),
-                  _buildStudyMaterialItem(
-                    'Current Affairs',
-                    'Latest updates and news for UPSC preparation',
-                    Icons.newspaper,
-                  ),
-                  _buildStudyMaterialItem(
-                    'Previous Year Questions',
-                    'Practice with past UPSC exam questions',
-                    Icons.history_edu,
-                  ),
-                ],
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: DummyData.subjects.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _selectedSubject = DummyData.subjects[index]['name'];
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final subject = DummyData.subjects[index]['name'];
+                  final materials = DummyData.studyMaterials[subject] ?? [];
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16.0),
+                    itemCount: materials.length + 1,
+                    itemBuilder: (context, materialIndex) {
+                      if (materialIndex == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Text(
+                            subject,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                        );
+                      }
+                      final material = materials[materialIndex - 1];
+                      return _buildStudyMaterialItem(
+                        material['title']!,
+                        material['description']!,
+                        Icons.book,
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
