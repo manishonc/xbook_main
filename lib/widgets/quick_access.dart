@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class QuickAccess extends StatelessWidget {
-  const QuickAccess({Key? key}) : super(key: key);
+  final Function(String) onItemTap;
+  const QuickAccess({Key? key, required this.onItemTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -45,27 +46,31 @@ class QuickAccess extends StatelessWidget {
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
             children: quickAccessMenu.map((item) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.indigo[50]!, Colors.indigo[100]!],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(item['icon'] as IconData,
-                        color: Colors.indigo[600], size: 20),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['name'] as String,
-                      style: TextStyle(fontSize: 12, color: Colors.indigo[800]),
-                      textAlign: TextAlign.center,
+              return GestureDetector(
+                onTap: () => onItemTap(item['name'] as String),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.indigo[50]!, Colors.indigo[100]!],
                     ),
-                  ],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(item['icon'] as IconData,
+                          color: Colors.indigo[600], size: 20),
+                      const SizedBox(height: 4),
+                      Text(
+                        item['name'] as String,
+                        style:
+                            TextStyle(fontSize: 12, color: Colors.indigo[800]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               );
             }).toList(),

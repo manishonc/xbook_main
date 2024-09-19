@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:xbook_main/models/app_info.dart';
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -38,6 +39,18 @@ class SupabaseService {
       });
     } catch (e) {
       print('Error updating session custom claim: $e');
+      rethrow;
+    }
+  }
+
+  Future<AppInfo> getAppsView(String appDomain) async {
+    try {
+      final response = await _client.rpc('get_apps_view', params: {
+        'p_app_domain': appDomain,
+      });
+      return AppInfo.fromJson(response);
+    } catch (e) {
+      print('Error getting apps view: $e');
       rethrow;
     }
   }

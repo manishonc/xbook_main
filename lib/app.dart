@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/splash_screen.dart';
+import 'screens/splash_screen/splash_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);

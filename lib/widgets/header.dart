@@ -1,8 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:xbook_main/services/supabase_service.dart';
+import 'package:xbook_main/utils/constants.dart';
+import '../models/app_info.dart';
 
-class Header extends StatelessWidget {
+class Header extends StatefulWidget {
   const Header({super.key});
+
+  @override
+  State<Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<Header> {
+  AppInfo? _appInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _getAppsView();
+  }
+
+  Future<void> _getAppsView() async {
+    try {
+      final result = await supabaseService.getAppsView(AppDomain);
+      setState(() {
+        _appInfo = result;
+      });
+      print('Apps view result: $_appInfo');
+    } catch (e) {
+      print('Error getting apps view: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error getting apps view: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +54,7 @@ class Header extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'UPSC Prep Po',
+                  _appInfo?.appName ?? 'Loading...',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

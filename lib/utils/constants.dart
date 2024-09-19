@@ -14,6 +14,4 @@ const String supabaseAnonKey =
     useLocalEnvironment ? localSupabaseAnonKey : productionSupabaseAnonKey;
 
 // ignore: constant_identifier_names
-const AppName = 'XBook';
-// ignore: constant_identifier_names
-const AppDomain = 'xbook.app';
+const AppDomain = 'ssc_gd';
