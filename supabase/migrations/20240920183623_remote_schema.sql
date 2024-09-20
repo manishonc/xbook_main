@@ -76,10 +76,39 @@ END;
 $function$
 ;
 
-CREATE TRIGGER on_session_insert_trigger AFTER INSERT ON auth.sessions FOR EACH ROW EXECUTE FUNCTION auth.on_session_insert();
+CREATE OR REPLACE TRIGGER on_session_insert_trigger AFTER INSERT ON auth.sessions FOR EACH ROW EXECUTE FUNCTION auth.on_session_insert();
 
-CREATE TRIGGER on_user_delete_trigger AFTER DELETE ON auth.users FOR EACH ROW EXECUTE FUNCTION auth.on_user_delete();
+CREATE OR REPLACE TRIGGER on_user_delete_trigger AFTER DELETE ON auth.users FOR EACH ROW EXECUTE FUNCTION auth.on_user_delete();
 
-CREATE TRIGGER on_user_insert_trigger AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION auth.on_user_insert();
+CREATE OR REPLACE TRIGGER on_user_insert_trigger AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION auth.on_user_insert();
+
+
+grant delete on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant insert on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant references on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant select on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant trigger on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant truncate on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant update on table "storage"."s3_multipart_uploads" to "postgres";
+
+grant delete on table "storage"."s3_multipart_uploads_parts" to "postgres";
+
+grant insert on table "storage"."s3_multipart_uploads_parts" to "postgres";
+
+grant references on table "storage"."s3_multipart_uploads_parts" to "postgres";
+
+grant select on table "storage"."s3_multipart_uploads_parts" to "postgres";
+
+grant trigger on table "storage"."s3_multipart_uploads_parts" to "postgres";
+
+grant truncate on table "storage"."s3_multipart_uploads_parts" to "postgres";
+
+grant update on table "storage"."s3_multipart_uploads_parts" to "postgres";
 
 
