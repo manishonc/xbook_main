@@ -30,6 +30,24 @@ CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
+CREATE OR REPLACE FUNCTION "public"."check_subject_access"("subject_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM private.app_exam_junctions aej
+    JOIN private.exams e ON e.id = aej.exam_id
+    JOIN public.exam_subjects_junction esj ON esj.exam_id = e.id
+    WHERE aej.app_id = public.get_session_app_id()
+    AND esj.subject_id = check_subject_access.subject_id
+  );
+END;
+$$;
+
+ALTER FUNCTION "public"."check_subject_access"("subject_id" "uuid") OWNER TO "postgres";
+
 CREATE OR REPLACE FUNCTION "public"."count_correct_answers"("quiz" "json") RETURNS integer
     LANGUAGE "plpgsql"
     AS $$
@@ -131,6 +149,20 @@ $$;
 
 ALTER FUNCTION "public"."get_apps_view"("p_app_domain" "text") OWNER TO "postgres";
 
+CREATE OR REPLACE FUNCTION "public"."get_exams_by_app"("p_app_id" "uuid") RETURNS TABLE("exam_id" "uuid", "created_at" timestamp with time zone, "title" "text", "exam_settings" "jsonb")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT exams.id, exams.created_at, exams.title, exams.exam_settings
+    FROM private.app_exam_junctions
+    JOIN private.exams ON app_exam_junctions.exam_id = exams.id
+    WHERE app_exam_junctions.app_id = p_app_id;
+END;
+$$;
+
+ALTER FUNCTION "public"."get_exams_by_app"("p_app_id" "uuid") OWNER TO "postgres";
+
 CREATE OR REPLACE FUNCTION "public"."get_quiz_results"("quiz" "json") RETURNS "json"
     LANGUAGE "plpgsql"
     AS $$
@@ -177,6 +209,43 @@ BEGIN
 END;$$;
 
 ALTER FUNCTION "public"."get_session_app_id"() OWNER TO "postgres";
+
+CREATE OR REPLACE FUNCTION "public"."get_subjects"("exam_id" "uuid") RETURNS TABLE("subject_id" "uuid", "subject_name" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    app_id uuid;
+BEGIN
+    -- Get the app_id associated with the current session
+    app_id := get_session_app_id();
+
+    -- Check if the app_id is found
+    IF app_id IS NULL THEN
+        RAISE EXCEPTION 'No app associated with the current session';
+    END IF;
+
+    -- If exam_id is not provided or is an empty string, get the first exam's supported subjects
+    IF exam_id IS NULL OR exam_id::text = '' THEN
+        RETURN QUERY
+        SELECT s.id, s.subject_name
+        FROM public.exam_subjects_junction esj
+        JOIN private.quiz_app_junction qaj ON esj.exam_id = qaj.quiz_id
+        JOIN public.subject s ON esj.subject_id = s.id
+        WHERE qaj.app_id = app_id
+        LIMIT 1;  -- Limit to the first exam's subjects
+    END IF;
+
+    -- Return subjects if the exam is supported by the app
+    RETURN QUERY
+    SELECT s.id, s.subject_name
+    FROM public.exam_subjects_junction esj
+    JOIN private.quiz_app_junction qaj ON esj.exam_id = qaj.quiz_id
+    JOIN public.subject s ON esj.subject_id = s.id
+    WHERE qaj.app_id = app_id AND esj.exam_id = exam_id;
+END;
+$$;
+
+ALTER FUNCTION "public"."get_subjects"("exam_id" "uuid") OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."insert_user_app_relation"("p_app_id" "uuid", "p_user_id" "uuid") RETURNS "json"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -729,13 +798,13 @@ CREATE POLICY "App_Based_Access" ON "public"."app_menu" FOR SELECT TO "authentic
    FROM "private"."app_menu_junction"
   WHERE (("app_menu_junction"."menu_id" = "app_menu"."id") AND ("app_menu_junction"."app_id" = "public"."get_session_app_id"())))));
 
+CREATE POLICY "Authenticated users can view subjects for their app" ON "public"."subject" FOR SELECT TO "authenticated" USING ("public"."check_subject_access"("id"));
+
 CREATE POLICY "Enable read access for all users" ON "public"."answers" FOR SELECT TO "authenticated" USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."material_type" FOR SELECT TO "authenticated" USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."questions" FOR SELECT TO "authenticated" USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."subject" FOR SELECT TO "authenticated" USING (true);
 
 CREATE POLICY "Select material if app and material are in junction" ON "public"."material" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
    FROM "public"."app_material_junction"
@@ -772,6 +841,10 @@ GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
 
+GRANT ALL ON FUNCTION "public"."check_subject_access"("subject_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."check_subject_access"("subject_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."check_subject_access"("subject_id" "uuid") TO "service_role";
+
 GRANT ALL ON FUNCTION "public"."count_correct_answers"("quiz" "json") TO "anon";
 GRANT ALL ON FUNCTION "public"."count_correct_answers"("quiz" "json") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."count_correct_answers"("quiz" "json") TO "service_role";
@@ -792,6 +865,10 @@ GRANT ALL ON FUNCTION "public"."get_apps_view"("p_app_domain" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_apps_view"("p_app_domain" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_apps_view"("p_app_domain" "text") TO "service_role";
 
+GRANT ALL ON FUNCTION "public"."get_exams_by_app"("p_app_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_exams_by_app"("p_app_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_exams_by_app"("p_app_id" "uuid") TO "service_role";
+
 GRANT ALL ON FUNCTION "public"."get_quiz_results"("quiz" "json") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_quiz_results"("quiz" "json") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_quiz_results"("quiz" "json") TO "service_role";
@@ -799,6 +876,10 @@ GRANT ALL ON FUNCTION "public"."get_quiz_results"("quiz" "json") TO "service_rol
 GRANT ALL ON FUNCTION "public"."get_session_app_id"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_session_app_id"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_session_app_id"() TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."get_subjects"("exam_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_subjects"("exam_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_subjects"("exam_id" "uuid") TO "service_role";
 
 GRANT ALL ON FUNCTION "public"."insert_user_app_relation"("p_app_id" "uuid", "p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."insert_user_app_relation"("p_app_id" "uuid", "p_user_id" "uuid") TO "authenticated";
