@@ -49,6 +49,54 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _getSubjects(BuildContext context) async {
+    try {
+      final data = await supabaseService.getSubjects();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Subjects'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: data
+                    .map((subject) =>
+                        Text('${subject['emoji']} ${subject['subject_name']}'))
+                    .toList(),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to fetch subjects: $e'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SecureWidget(
@@ -83,6 +131,10 @@ class HomeScreen extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => _updateSessionCustomClaim(context),
                   child: const Text('Update Session Custom Claim'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _getSubjects(context),
+                  child: const Text('Get Subjects'),
                 ),
                 const BottomNavigation(currentRoute: '/home'),
               ],

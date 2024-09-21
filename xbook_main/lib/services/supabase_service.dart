@@ -57,6 +57,11 @@ class SupabaseService {
       rethrow;
     }
   }
+
+  Future<List<Map<String, dynamic>>> getSubjects() async {
+    final data = await _client.from('subject').select();
+    return data;
+  }
 }
 
 final supabaseService = SupabaseService();
