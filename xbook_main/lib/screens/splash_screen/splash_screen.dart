@@ -3,6 +3,7 @@ import '../../services/supabase_service.dart';
 import 'abstract_background_painter.dart';
 import 'loading_dots.dart';
 import '../../utils/constants.dart';
+import 'dart:convert';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -59,16 +60,43 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _updateSessionClaimAndNavigate() async {
     try {
-      await SupabaseService().updateSessionCustomClaim(AppDomain);
-      _navigateToHome();
+      final response =
+          await SupabaseService().updateSessionCustomClaim(AppDomain);
+
+      if (response['data'] != null && response['data']['status'] == 'error') {
+        if (mounted) {
+          _showErrorDialog(response['data']['message'] ?? 'An error occurred');
+        }
+      } else {
+        _navigateToHome();
+      }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update session claim: $error')),
-        );
-        // Optionally, you can decide to navigate to login or home page here
+        _showErrorDialog('Failed to update session claim: $error');
       }
     }
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(errorMessage),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Try Again'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _updateSessionClaimAndNavigate();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _navigateToHome() {
