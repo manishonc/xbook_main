@@ -32,11 +32,14 @@ class SupabaseService {
     return _client.auth.currentSession;
   }
 
-  Future<void> updateSessionCustomClaim(String appDomain) async {
+  Future<Map<String, dynamic>> updateSessionCustomClaim(
+      String appDomain) async {
     try {
-      await _client.rpc('update_session_custom_claim', params: {
+      final response =
+          await _client.rpc('update_session_custom_claim', params: {
         'p_app_domain': appDomain,
       });
+      return response as Map<String, dynamic>;
     } catch (e) {
       print('Error updating session custom claim: $e');
       rethrow;
