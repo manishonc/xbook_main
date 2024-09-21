@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_background.dart';
 import 'widgets/subject_filter.dart';
-import '../../data/dummy_data.dart';
-import 'package:flutter/services.dart';
+import '../../models/subject.dart';
+import '../../services/supabase_service.dart';
 
 class StudyMaterialScreen extends StatefulWidget {
   const StudyMaterialScreen({Key? key}) : super(key: key);
@@ -13,13 +13,32 @@ class StudyMaterialScreen extends StatefulWidget {
 
 class _StudyMaterialScreenState extends State<StudyMaterialScreen> {
   late PageController _pageController;
-  late String _selectedSubject;
+  String _selectedSubject = ''; // Initialize with an empty string
+  List<Subject> _subjects = [];
+  bool _isLoading = true; // Add a loading state
 
   @override
   void initState() {
     super.initState();
-    _selectedSubject = DummyData.subjects[0]['name'];
     _pageController = PageController(initialPage: 0);
+    _loadSubjects();
+  }
+
+  Future<void> _loadSubjects() async {
+    try {
+      final subjects = await supabaseService.getSubjects();
+      setState(() {
+        _subjects = subjects;
+        _selectedSubject = subjects.isNotEmpty ? subjects[0].subjectName : '';
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading subjects: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      // Handle error (e.g., show a snackbar)
+    }
   }
 
   @override
@@ -31,8 +50,10 @@ class _StudyMaterialScreenState extends State<StudyMaterialScreen> {
   void _onSubjectSelected(String subject) {
     setState(() {
       _selectedSubject = subject;
-      final index = DummyData.subjects.indexWhere((s) => s['name'] == subject);
-      _pageController.jumpToPage(index);
+      final index = _subjects.indexWhere((s) => s.subjectName == subject);
+      if (index != -1) {
+        _pageController.jumpToPage(index);
+      }
     });
   }
 
@@ -55,56 +76,51 @@ class _StudyMaterialScreenState extends State<StudyMaterialScreen> {
         ),
       ),
       body: AppBackground(
-        child: Column(
-          children: [
-            SubjectFilter(
-              selectedSubject: _selectedSubject,
-              onSubjectSelected: _onSubjectSelected,
-              subjects:
-                  DummyData.subjects.map((s) => s['name'] as String).toList(),
-            ),
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: DummyData.subjects.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _selectedSubject = DummyData.subjects[index]['name'];
-                  });
-                },
-                itemBuilder: (context, index) {
-                  final subject = DummyData.subjects[index]['name'];
-                  final materials = DummyData.studyMaterials[subject] ?? [];
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: materials.length + 1,
-                    itemBuilder: (context, materialIndex) {
-                      if (materialIndex == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: Text(
-                            subject,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.indigo,
-                            ),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  SubjectFilter(
+                    selectedSubject: _selectedSubject,
+                    onSubjectSelected: _onSubjectSelected,
+                    subjects: _subjects,
+                  ),
+                  Expanded(
+                    child: _subjects.isEmpty
+                        ? Center(child: Text('No subjects available'))
+                        : PageView.builder(
+                            controller: _pageController,
+                            itemCount: _subjects.length,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _selectedSubject = _subjects[index].subjectName;
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              final subject = _subjects[index];
+                              return ListView.builder(
+                                padding: const EdgeInsets.all(16.0),
+                                itemCount: 1,
+                                itemBuilder: (context, materialIndex) {
+                                  return Padding(
+                                    padding:
+                                        const EdgeInsets.only(bottom: 16.0),
+                                    child: Text(
+                                      subject.subjectName,
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.indigo,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                           ),
-                        );
-                      }
-                      final material = materials[materialIndex - 1];
-                      return _buildStudyMaterialItem(
-                        material['title']!,
-                        material['description']!,
-                        Icons.book,
-                      );
-                    },
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
