@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:xbook_main/models/app_info.dart';
 
+import '../models/subject.dart';
+
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
@@ -58,9 +60,9 @@ class SupabaseService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getSubjects() async {
+  Future<List<Subject>> getSubjects() async {
     final data = await _client.from('subject').select();
-    return data;
+    return data.map((e) => Subject.fromJson(e)).toList();
   }
 }
 

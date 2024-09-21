@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/subject.dart';
 import '../../widgets/header.dart';
 import '../../widgets/banner.dart';
 import '../../widgets/quick_access.dart';
@@ -51,23 +52,23 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> _getSubjects(BuildContext context) async {
     try {
-      final data = await supabaseService.getSubjects();
+      final List<Subject> subjects = await supabaseService.getSubjects();
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Subjects'),
+            title: const Text('Subjects'),
             content: SingleChildScrollView(
               child: ListBody(
-                children: data
+                children: subjects
                     .map((subject) =>
-                        Text('${subject['emoji']} ${subject['subject_name']}'))
+                        Text('${subject.emoji} ${subject.subjectName}'))
                     .toList(),
               ),
             ),
             actions: <Widget>[
               TextButton(
-                child: Text('Close'),
+                child: const Text('Close'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -81,11 +82,11 @@ class HomeScreen extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Error'),
+            title: const Text('Error'),
             content: Text('Failed to fetch subjects: $e'),
             actions: <Widget>[
               TextButton(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
